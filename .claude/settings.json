@@ -1,0 +1,52 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre_secrets_guard.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre_command_firewall.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre_rate_limiter.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre_commit_validator.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post_auto_backup.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/post_syntax_checker.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post_session_summary.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Submission Tests
+      id: submission-tests
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Submission Tests
+        setup-command: chmod +x test.sh .claude/hooks/*.sh hook_runner.sh 2>/dev/null;
+          true
+        command: bash test.sh
+        timeout: 1
+        max-score: 100
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        SUBMISSION-TESTS_RESULTS: "${{steps.submission-tests.outputs.result}}"
+      with:
+        runners: submission-tests
