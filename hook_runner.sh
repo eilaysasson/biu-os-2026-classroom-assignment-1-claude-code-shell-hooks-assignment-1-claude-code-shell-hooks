@@ -81,7 +81,68 @@ FINAL_EXIT=0
 #             increment WARNINGS
 #  10. Print a blank line after each hook result.
 # =============================================================================
+# Read the config file line by line
+# Read the config file line by line using ':' as a separator
+while IFS=: read -r CONF_EVENT CONF_MATCHER CONF_SCRIPT || [ -n "$CONF_EVENT" ]; do
+    # 1. Skip comments (lines starting with '#') and empty lines
+    [[ -z "$CONF_EVENT" || "$CONF_EVENT" == \#* ]] && continue
 
+    # 3. Skip the line if CONF_EVENT does not match EVENT_TYPE
+    [ "$CONF_EVENT" != "$EVENT_TYPE" ] && continue
+
+    # 4. Skip if CONF_MATCHER does not match TOOL_NAME and is not '*'
+    if [ "$CONF_MATCHER" != "$TOOL_NAME" ] && [ "$CONF_MATCHER" != "*" ]; then
+        continue
+    fi
+
+    # 5. Increment MATCHED count
+    MATCHED=$((MATCHED + 1))
+
+    # 6. Resolve the script path: prepend RUNNER_DIR if it starts with './'
+    ACTUAL_SCRIPT="$CONF_SCRIPT"
+    if [[ "$CONF_SCRIPT" == ./* ]]; then
+        ACTUAL_SCRIPT="$RUNNER_DIR/${CONF_SCRIPT#./}"
+    fi
+
+    # 7. Print which script is running (using CYAN)
+    printf '%bRunning hook:%b %s\n' "$CYAN" "$RESET" "$CONF_SCRIPT"
+
+    # 8. Execute the hook script and capture results
+    # Feeding it the saved stdin and capturing stderr separately
+    ERR_FILE=$(mktemp)
+    "$ACTUAL_SCRIPT" < "$TEMP_FILE" 2> "$ERR_FILE"
+    EXIT_CODE=$?
+    STDERR_CONTENT=$(cat "$ERR_FILE")
+    rm -f "$ERR_FILE"
+
+    # 9. Handle execution results based on EXIT_CODE
+    if [ "$EXIT_CODE" -eq 0 ]; then
+        # Case 0: Passed
+        printf '%b✓ Passed%b\n' "$GREEN" "$RESET"
+        PASSED=$((PASSED + 1))
+    elif [ "$EXIT_CODE" -eq 2 ]; then
+        # Case 2: BLOCKED (Critical fail, stops the entire chain)
+        printf '%b✗ BLOCKED%b\n' "$RED" "$RESET"
+        [ -n "$STDERR_CONTENT" ] && printf '%s\n' "$STDERR_CONTENT" >&2
+        BLOCKED=$((BLOCKED + 1))
+        FINAL_EXIT=2
+
+        # EXACT STRING required by the test suite to pass
+        printf '%bChain stopped%b\n' "$RED" "$RESET"
+
+        printf '\n'
+        break
+    else
+        # Other: Warning (non-fatal)
+        printf '%b⚠ Warning (exit %d)%b\n' "$YELLOW" "$EXIT_CODE" "$RESET"
+        [ -n "$STDERR_CONTENT" ] && printf '%s\n' "$STDERR_CONTENT" >&2
+        WARNINGS=$((WARNINGS + 1))
+    fi
+
+    # 10. Blank line for readability after each hook
+    printf '\n'
+
+done < "$CONFIG_FILE"
 # ── Summary ────────────────────────────────────────────────────────────────────
 printf '%b─── Hook Execution Summary ──────────%b\n' "$BOLD" "$RESET"
 printf 'Matched:  %d hooks\n' "$MATCHED"
