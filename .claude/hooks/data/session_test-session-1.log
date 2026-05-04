@@ -1,6 +1,2 @@
-[2026-04-07 01:45:09] BACKUP src/main.c -> $DATA_DIR/.backups/main.c.20240101_120000 (512 bytes)
-[2026-04-07 01:45:09] SYNTAX_OK src/main.c (c)
-[2026-04-07 01:45:09] BACKUP src/main.c -> $DATA_DIR/.backups/main.c.20240101_120001 (520 bytes)
-[2026-04-07 01:45:09] BACKUP src/utils.h -> $DATA_DIR/.backups/utils.h.20240101_120002 (128 bytes)
-[2026-04-07 01:45:09] SYNTAX_ERROR src/broken.c (c)
-[2026-04-07 01:45:09] SYNTAX_OK src/utils.h (c)
+[2026-05-04 19:05:16] BACKUP /tmp/tmp.3Tusi4M67Z.sh -> .backups/tmp.3Tusi4M67Z.sh.2026-05-04_190516 (20 bytes)
+[2026-05-04 19:05:16] SYNTAX_OK /tmp/tmp.3Tusi4M67Z.sh (sh)
